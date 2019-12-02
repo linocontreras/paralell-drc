@@ -78,9 +78,10 @@ public class SequentialCompressor {
         try {
 
             FileInputStream input = new FileInputStream(inputFile);
-            ByteBuffer dataBytes = ByteBuffer.wrap(input.readAllBytes());
-            DoubleBuffer dataBuffer = DoubleBuffer.allocate(dataBytes.limit());
-            double[] data = dataBuffer.put(dataBytes.asDoubleBuffer()).array();
+            byte[] dataBytes = input.readAllBytes();
+            ByteBuffer dataBytesBuffer = ByteBuffer.wrap(dataBytes).order(ByteOrder.LITTLE_ENDIAN);
+            DoubleBuffer dataBuffer = DoubleBuffer.allocate(dataBytes.length / Double.BYTES);
+            double[] data = dataBuffer.put(dataBytesBuffer.asDoubleBuffer()).array();
             input.close();
 
             SequentialCompressor sc = new SequentialCompressor(data, threshold, ratio, gain);
@@ -90,7 +91,7 @@ public class SequentialCompressor {
 
             double[] compressed = sc.compress();
 
-            System.out.println("Time elapsed: " + (System.nanoTime() - start / 1e6) + "ms");
+            System.out.println("Time elapsed: " + ((System.nanoTime() - start) / 1000000) + "ms");
 
             String outputFilePath = args[0].substring(0, args[0].lastIndexOf("."));
             FileOutputStream output = new FileOutputStream(new File(outputFilePath + ".cps"));
