@@ -17,7 +17,7 @@ public class ExtractFrames {
 
     public ByteBuffer extract() throws WavFileException, IOException {
         ByteBuffer data = ByteBuffer.allocate((int) wav.getNumFrames() * wav.getNumChannels() * Double.BYTES);
-        this.wav.readFrames(data.asDoubleBuffer(), (int)wav.getNumFrames());
+        this.wav.readFrames(data.asDoubleBuffer(), (int)wav.getNumFrames() * wav.getNumChannels());
         return data;
     }
 

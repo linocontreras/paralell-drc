@@ -23,22 +23,21 @@ public class SequentialCompressor {
     }
 
     public double[] compress() {
-        double[] data = new double[this.frames.length];
         for (int i = 0; i < frames.length; i++) {
             if (frames[i] == 0)
                 continue;
+
             int sign = frames[i] < 0 ? -1 : 1;
             frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
 
-            frames[i] += this.gain;
+            frames[i] *= Math.log(10 + this.gain);
             if (frames[i] > threshold) {
                 frames[i] = threshold + ((frames[i] - threshold) * (1 / ratio));
             }
             frames[i] = frames[i] <= 1 ? frames[i] : 1;
             frames[i] = frames[i] * sign;
         }
-
-        return data;
+        return frames;
     }
 
     public static void main(String[] args) {
@@ -70,8 +69,8 @@ public class SequentialCompressor {
 
         double gain = Double.parseDouble(args[3]);
 
-        if (gain < 0 || gain > 1) {
-            System.err.println("La ganancia debe ser entre 0 y 1.");
+        if (gain < 0) {
+            System.err.println("La ganancia debe ser mayor o igual a 0.");
             System.exit(5);
         }
 
@@ -79,7 +78,7 @@ public class SequentialCompressor {
 
             FileInputStream input = new FileInputStream(inputFile);
             byte[] dataBytes = input.readAllBytes();
-            ByteBuffer dataBytesBuffer = ByteBuffer.wrap(dataBytes).order(ByteOrder.LITTLE_ENDIAN);
+            ByteBuffer dataBytesBuffer = ByteBuffer.wrap(dataBytes);//.order(ByteOrder.BIG_ENDIAN);
             DoubleBuffer dataBuffer = DoubleBuffer.allocate(dataBytes.length / Double.BYTES);
             double[] data = dataBuffer.put(dataBytesBuffer.asDoubleBuffer()).array();
             input.close();

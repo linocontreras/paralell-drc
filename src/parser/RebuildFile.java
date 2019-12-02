@@ -16,7 +16,7 @@ public class RebuildFile {
     private WavFile newWavFile;
 
     public RebuildFile(String inputFile) throws WavFileException, IOException {
-        this.wav = WavFile.openWavFile(new File(inputFile + ".cps"));
+        this.wav = WavFile.openWavFile(new File(inputFile));
         File outputFile = new File(inputFile.substring(0, inputFile.lastIndexOf(".")) + "_compressed.wav");
         this.newWavFile = WavFile.newWavFile(outputFile, this.wav.getNumChannels(), this.wav.getNumFrames(), this.wav.getValidBits(), this.wav.getSampleRate());
 
@@ -29,6 +29,7 @@ public class RebuildFile {
     public void close() throws IOException
     {
         this.wav.close();
+        this.newWavFile.close();
     }
 
     public static void main(String[] args) {
@@ -37,11 +38,11 @@ public class RebuildFile {
             System.exit(1);
         }
         try {
-            DataInputStream in = new DataInputStream(new FileInputStream(args[0]));
+            DataInputStream in = new DataInputStream(new FileInputStream(args[0] + ".cps"));
             byte[] data = in.readAllBytes();
             in.close();
 
-            ByteBuffer dataBytesBuffer = ByteBuffer.wrap(data).order(ByteOrder.LITTLE_ENDIAN);            
+            ByteBuffer dataBytesBuffer = ByteBuffer.wrap(data);//.order(ByteOrder.LITTLE_ENDIAN);            
             
             RebuildFile rebuildFile = new RebuildFile(args[0]);
             rebuildFile.rebuild(dataBytesBuffer.asDoubleBuffer());
