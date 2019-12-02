@@ -1,3 +1,7 @@
+// Wav file Exception class
+// A.Greensted
+// http://www.labbookpages.co.uk
+
 public class WavFileException extends Exception
 {
 	public WavFileException()
