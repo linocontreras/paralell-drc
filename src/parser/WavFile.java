@@ -1,3 +1,5 @@
+package parser;
+
 // Wav file IO class
 // A.Greensted
 // http://www.labbookpages.co.uk
@@ -9,6 +11,7 @@
 // Version 1.0
 
 import java.io.*;
+import java.nio.DoubleBuffer;
 
 public class WavFile
 {
@@ -561,12 +564,12 @@ public class WavFile
 
 	// Double
 	// ------
-	public int readFrames(double[] sampleBuffer, int numFramesToRead) throws IOException, WavFileException
+	public int readFrames(DoubleBuffer sampleBuffer, int numFramesToRead) throws IOException, WavFileException
 	{
 		return readFrames(sampleBuffer, 0, numFramesToRead);
 	}
 
-	public int readFrames(double[] sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
+	public int readFrames(DoubleBuffer sampleBuffer, int offset, int numFramesToRead) throws IOException, WavFileException
 	{
 		if (ioState != IOState.READING) throw new IOException("Cannot read from WavFile instance");
 
@@ -576,7 +579,7 @@ public class WavFile
 
 			for (int c=0 ; c<numChannels ; c++)
 			{
-				sampleBuffer[offset] = floatOffset + (double) readSample() / floatScale;
+				sampleBuffer.put(floatOffset + (double) readSample() / floatScale);
 				offset ++;
 			}
 
@@ -608,12 +611,12 @@ public class WavFile
 		return numFramesToRead;
 	}
 
-	public int writeFrames(double[] sampleBuffer, int numFramesToWrite) throws IOException, WavFileException
+	public int writeFrames(DoubleBuffer sampleBuffer, int numFramesToWrite) throws IOException, WavFileException
 	{
 		return writeFrames(sampleBuffer, 0, numFramesToWrite);
 	}
 
-	public int writeFrames(double[] sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
+	public int writeFrames(DoubleBuffer sampleBuffer, int offset, int numFramesToWrite) throws IOException, WavFileException
 	{
 		if (ioState != IOState.WRITING) throw new IOException("Cannot write to WavFile instance");
 
@@ -623,7 +626,7 @@ public class WavFile
 
 			for (int c=0 ; c<numChannels ; c++)
 			{
-				writeSample((long) (floatScale * (floatOffset + sampleBuffer[offset])));
+				writeSample((long) (floatScale * (floatOffset + sampleBuffer.get(offset))));
 				offset ++;
 			}
 
@@ -722,7 +725,7 @@ public class WavFile
 
 //				int[] buffer = new int[BUF_SIZE * numChannels];
 //				long[] buffer = new long[BUF_SIZE * numChannels];
-				double[] buffer = new double[BUF_SIZE * numChannels];
+				DoubleBuffer buffer = DoubleBuffer.allocate(BUF_SIZE * numChannels);
 
 				int framesRead = 0;
 				int framesWritten = 0;
@@ -740,7 +743,7 @@ public class WavFile
 			}
 
 			WavFile writeWavFile = newWavFile(new File("out2.wav"), 1, 10, 23, 44100);
-			double[] buffer = new double[10];
+			DoubleBuffer buffer = DoubleBuffer.allocate(10);
 			writeWavFile.writeFrames(buffer, 10);
 			writeWavFile.close();
 		}

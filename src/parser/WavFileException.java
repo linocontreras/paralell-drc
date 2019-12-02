@@ -1,9 +1,13 @@
+package parser;
+
 // Wav file Exception class
 // A.Greensted
 // http://www.labbookpages.co.uk
 
 public class WavFileException extends Exception
 {
+	private static final long serialVersionUID = 6644199519150023984L;
+
 	public WavFileException()
 	{
 		super();

@@ -1,4 +1,4 @@
-
+package parser;
 /**
  * Programación avanzada: Proyecto final
  * Fecha: 2019-12-03
@@ -17,8 +17,8 @@ public class ExtractFrames {
     }
 
     public ByteBuffer extract() throws WavFileException, IOException {
-        ByteBuffer data = ByteBuffer.allocate((int) wav.getNumFrames() * Double.BYTES);
-        wav.readFrames(data.asDoubleBuffer().array(), (int) wav.getNumFrames());
+        ByteBuffer data = ByteBuffer.allocate((int) wav.getNumFrames() * wav.getNumChannels() * Double.BYTES);
+        this.wav.readFrames(data.asDoubleBuffer(), (int)wav.getNumFrames());
         return data;
     }
 
@@ -43,6 +43,7 @@ public class ExtractFrames {
         } catch(Exception ex) {
             System.err.println("Ha ocurrido un error al intentar extraer los frames.");
             System.err.print(ex);
+            ex.printStackTrace();
             System.exit(2);
         }
     }
