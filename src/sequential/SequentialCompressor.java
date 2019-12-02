@@ -78,7 +78,10 @@ public class SequentialCompressor {
         try {
 
             FileInputStream input = new FileInputStream(inputFile);
-            double[] data = ByteBuffer.wrap(input.readAllBytes()).asDoubleBuffer().array();
+            ByteBuffer dataBytes = ByteBuffer.wrap(input.readAllBytes());
+            DoubleBuffer dataBuffer = DoubleBuffer.allocate(dataBytes.limit());
+            double[] data = dataBuffer.put(dataBytes.asDoubleBuffer()).array();
+            input.close();
 
             SequentialCompressor sc = new SequentialCompressor(data, threshold, ratio, gain);
 
@@ -98,8 +101,6 @@ public class SequentialCompressor {
 
             output.write(compressedData.array());
             output.close();
-
-
         } catch (Exception ex) {
             ex.printStackTrace();
             System.exit(100);
