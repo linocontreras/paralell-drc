@@ -10,23 +10,41 @@ import java.nio.ByteBuffer;
 import java.nio.DoubleBuffer;
 
 public class ExtractFrames {
+    private WavFile wav;
+
+    public ExtractFrames(String inputFile) throws WavFileException, IOException {
+        this.wav = WavFile.openWavFile(new File(inputFile));
+    }
+
+    public ByteBuffer extract() throws WavFileException, IOException {
+        ByteBuffer data = ByteBuffer.allocate((int) wav.getNumFrames() * Double.BYTES);
+        wav.readFrames(data.asDoubleBuffer().array(), (int) wav.getNumFrames());
+        return data;
+    }
+
+    public void close() throws IOException
+    {
+        this.wav.close();
+    }
+
     public static void main(String[] args) {
         if (args.length != 1) {
             PrintUsage();
             System.exit(1);
         }
-
-        WavFile wavFile = WavFile.openWavFile(new File(args[0]));
-
-        DataOutputStream out = new DataOutputStream(new FileOutputStream(args[0] + ".frames"));
-        ByteBuffer data = ByteBuffer.allocate((int) wavFile.getNumFrames() * Double.BYTES);
-        
-        wavFile.readFrames(data.asDoubleBuffer().array(), (int)wavFile.getNumFrames());
-        
-        out.write(data.array());
-
-        out.close();
-        wavFile.close();
+        try {
+            ExtractFrames extractFrames = new ExtractFrames(args[0]);
+            ByteBuffer data = extractFrames.extract();
+            extractFrames.close();
+    
+            DataOutputStream out = new DataOutputStream(new FileOutputStream(args[0] + ".frames"));
+            out.write(data.array());
+            out.close();   
+        } catch(Exception ex) {
+            System.err.println("Ha ocurrido un error al intentar extraer los frames.");
+            System.err.print(ex);
+            System.exit(2);
+        }
     }
 
     private static void PrintUsage() {
