@@ -48,6 +48,6 @@ public class ExtractFrames {
     }
 
     private static void PrintUsage() {
-        System.out.println("Usage: java ExtractFrames audiofile.wav");
+        System.out.println("Usage: java parser.ExtractFrames audiofile.wav");
     }
 }

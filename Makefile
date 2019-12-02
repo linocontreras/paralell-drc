@@ -1,6 +1,6 @@
-all: ExtractFrames SequentialCompressor
+all: Parser SequentialCompressor
 
-ExtractFrames:
+Parser:
 	javac -d ./bin ./src/parser/*
-SequentialCompressor: ExtractFrames
+SequentialCompressor: Parser
 	javac -d ./bin ./src/sequential/*
