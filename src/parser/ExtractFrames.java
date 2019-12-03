@@ -7,7 +7,6 @@ package parser;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 public class ExtractFrames {
     private WavFile wav;

@@ -8,7 +8,6 @@ package parser;
 
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.DoubleBuffer;
 
 public class RebuildFile {
