@@ -13,4 +13,4 @@ FJCompressor: Parser
 	javac -d ./bin ./src/forkjoin/*
 
 CSequentialCompressor: Parser
-	gcc -o ./bin/csequential ./src/csequential/csequential.c -lm -ggdb
+	gcc -o ./bin/csequential ./src/csequential/csequential.c -lm -ggdb -Wall

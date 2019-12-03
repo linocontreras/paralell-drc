@@ -113,7 +113,7 @@ public class FJCompressor extends RecursiveAction {
                 int sign = frames[i] < 0 ? -1 : 1;
                 frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
     
-                frames[i] *= Math.log(10 + this.gain);
+                frames[i] *= Math.log10(10 + this.gain);
                 if (frames[i] > threshold) {
                     frames[i] = threshold + ((frames[i] - threshold) * (1 / ratio));
                 }

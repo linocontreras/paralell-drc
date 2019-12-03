@@ -27,9 +27,33 @@ double stop_timer() {
 	return duration;
 }
 
+typedef union
+{
+    double d;
+    unsigned char s[8];
+} Union_t;
+
+// reverse little to big endian or vice versa as per requirement
+double reverse_endian(double in)
+{
+    int i, j;
+    unsigned char t;
+    Union_t val;
+
+    val.d = in;
+    // swap MSB with LSB etc.
+    for(i=0, j=7; i < j; i++, j--)
+    {
+        t = val.s[i];
+        val.s[i] = val.s[j];
+        val.s[j] = t;
+    }
+    return val.d;
+}
+
 void compress(double *frames, int size, double threshold, double ratio, double gain) {
     int i;
-    for (int i = 0; i < size; i++) {
+    for (i = 0; i < size; i++) {
         if (frames[i] == 0)
                 continue;
 
@@ -75,7 +99,7 @@ int main(int argc, char **argv) {
         return 4;
     }
 
-    double gain = strtod(argv[3], NULL);
+    double gain = strtod(argv[4], NULL);
 
     if (gain < 0) {
         fprintf(stderr, "La ganancia debe ser mayor o igual a 0.");
@@ -83,22 +107,35 @@ int main(int argc, char **argv) {
     }
 
     fseek(file, 0L, SEEK_END);
-    long size = ftell(file) / sizeof(double);
+    int size = ftell(file) / sizeof (double);
     rewind(file);
 
     double *frames = malloc(size * sizeof *frames);
 
-    fread(frames, size, sizeof *frames, file);
+    fread(frames, sizeof *frames, size, file);
 
+    int i;
+    for (i = 0;i < size; i++) {
+        frames[i] = reverse_endian(frames[i]);
+    }
     start_timer();
     double ms;
 
     printf("Starting csequential...\n");
     compress(frames, size, threshold, ratio, gain);
     ms = stop_timer();
-
     printf("Elapsed time: %lf ms.\n", ms);
 
+
+    FILE *newfile = fopen("testing.frames", "wb");
+
+    for (i = 0;i < size; i++) {
+        frames[i] = reverse_endian(frames[i]);
+    }
+    fwrite(frames, sizeof *frames, size, newfile);
+
     free(frames);
+    fclose(file);
+    fclose(newfile);
     return 0;
 }
