@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <omp.h>
+#include <string.h>
 
 struct timeval startTime, stopTime;
 int started = 0;
