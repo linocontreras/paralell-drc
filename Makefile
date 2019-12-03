@@ -14,3 +14,6 @@ FJCompressor: Parser
 
 CSequentialCompressor: Parser
 	gcc -o ./bin/csequential ./src/csequential/csequential.c -lm -ggdb -Wall
+
+COpenMPCompressor: Parser
+	gcc -o ./bin/copenmp ./src/copenmp/copenmp.c -lm -ggdb -Wall -fopenmp

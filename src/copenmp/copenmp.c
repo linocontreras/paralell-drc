@@ -4,7 +4,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/types.h>
-#include <string.h>
+#include <omp.h>
 
 struct timeval startTime, stopTime;
 int started = 0;
@@ -53,12 +53,13 @@ double reverse_endian(double in)
 }
 
 void compress(double *frames, int size, double threshold, double ratio, double gain) {
-    int i;
+    int i, sign;
+    #pragma omp parallel for shared(frames, threshold, ratio, gain) private(sign)
     for (i = 0; i < size; i++) {
         if (frames[i] == 0)
                 continue;
 
-        int sign = frames[i] < 0 ? -1 : 1;
+        sign = frames[i] < 0 ? -1 : 1;
         frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
 
         frames[i] *= log10(10 + gain);
@@ -67,7 +68,7 @@ void compress(double *frames, int size, double threshold, double ratio, double g
         }
         frames[i] = frames[i] <= 1 ? frames[i] : 1;
         frames[i] = frames[i] * sign;
-        }
+    }
 }
 
 void printUsage(char *program) {
