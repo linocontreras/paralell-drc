@@ -4,44 +4,31 @@
  * Autor: A01700457 - Lino Ronaldo Contreras Gallegos
  */
 
-package threads;
+package forkjoin;
 
 import java.io.*;
 import java.nio.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveAction;
 
-public class ThreadsCompressor implements Runnable {
+public class FJCompressor extends RecursiveAction {
+    private static final long serialVersionUID = -6712683024124632801L;
+    private static final int th = 100;
+    
     double[] frames;
     double threshold;
     double ratio;
     double gain;
-    int nThreads;
-    int threadId;
+    int start;
+    int end;
 
-    public ThreadsCompressor(double[] frames, double threshold, double ratio, double gain, int nThreads, int threadId) {
+    public FJCompressor(double[] frames, double threshold, double ratio, double gain, int start, int end) {
         this.frames = frames;
         this.threshold = threshold;
         this.ratio = ratio;
         this.gain = gain;
-        this.nThreads = nThreads;
-        this.threadId = threadId;
-    }
-
-    @Override
-    public void run() {
-        for (int i = threadId; i < frames.length; i += nThreads) {
-            if (frames[i] == 0)
-                continue;
-
-            int sign = frames[i] < 0 ? -1 : 1;
-            frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
-
-            frames[i] *= Math.log(10 + this.gain);
-            if (frames[i] > threshold) {
-                frames[i] = threshold + ((frames[i] - threshold) * (1 / ratio));
-            }
-            frames[i] = frames[i] <= 1 ? frames[i] : 1;
-            frames[i] = frames[i] * sign;
-        }
+        this.start = start;
+        this.end = end;
     }
 
     public static void main(String[] args) {
@@ -79,7 +66,6 @@ public class ThreadsCompressor implements Runnable {
         }
 
         try {
-
             FileInputStream input = new FileInputStream(inputFile);
             byte[] dataBytes = input.readAllBytes();
             ByteBuffer dataBytesBuffer = ByteBuffer.wrap(dataBytes);// .order(ByteOrder.BIG_ENDIAN);
@@ -89,19 +75,12 @@ public class ThreadsCompressor implements Runnable {
 
             int cores = Runtime.getRuntime().availableProcessors();
 
-            Thread[] tcs = new Thread[cores];
+            ForkJoinPool pool = new ForkJoinPool(cores);
 
             System.out.println("ThreadsCompressor Starting...");
             long start = System.nanoTime();
 
-            for (int i = 0; i < cores; i++) {
-                tcs[i] = new Thread(new ThreadsCompressor(data, threshold, ratio, gain, cores, i));
-                tcs[i].start();
-            }
-
-            for (Thread t : tcs) {
-                t.join();
-            }
+            pool.invoke(new FJCompressor(data, threshold, ratio, gain, 0, data.length));
 
             System.out.println("Time elapsed: " + ((System.nanoTime() - start) / 1000000) + "ms");
 
@@ -121,6 +100,33 @@ public class ThreadsCompressor implements Runnable {
     }
 
     private static void PrintUsage() {
-        System.err.println("Usage: java threads.ThreadsCompressor file.frames threshold ratio gain");
+        System.err.println("Usage: java forkjoin.FJCompressor file.frames threshold ratio gain");
+    }
+
+    @Override
+    protected void compute() {
+        if (end - start > FJCompressor.th) {
+            for (int i = start; i < end; i += i) {
+                if (frames[i] == 0)
+                    continue;
+    
+                int sign = frames[i] < 0 ? -1 : 1;
+                frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
+    
+                frames[i] *= Math.log(10 + this.gain);
+                if (frames[i] > threshold) {
+                    frames[i] = threshold + ((frames[i] - threshold) * (1 / ratio));
+                }
+                frames[i] = frames[i] <= 1 ? frames[i] : 1;
+                frames[i] = frames[i] * sign;
+            }
+        }
+        else {
+            int mid = start + (end - start) / 2;
+            FJCompressor a = new FJCompressor(frames, threshold, ratio, gain, start, mid);
+            FJCompressor b = new FJCompressor(frames, threshold, ratio, gain, mid, end);
+
+            invokeAll(a, b);
+        }
     }
 }
