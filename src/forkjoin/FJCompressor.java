@@ -13,8 +13,8 @@ import java.util.concurrent.RecursiveAction;
 
 public class FJCompressor extends RecursiveAction {
     private static final long serialVersionUID = -6712683024124632801L;
-    private static final int th = 100;
-    
+    private static final int th = 200;
+
     double[] frames;
     double threshold;
     double ratio;
@@ -77,7 +77,7 @@ public class FJCompressor extends RecursiveAction {
 
             ForkJoinPool pool = new ForkJoinPool(cores);
 
-            System.out.println("ThreadsCompressor Starting...");
+            System.out.println("FJCompressor Starting...");
             long start = System.nanoTime();
 
             pool.invoke(new FJCompressor(data, threshold, ratio, gain, 0, data.length));
@@ -105,8 +105,8 @@ public class FJCompressor extends RecursiveAction {
 
     @Override
     protected void compute() {
-        if (end - start > FJCompressor.th) {
-            for (int i = start; i < end; i += i) {
+        if (end - start <= FJCompressor.th) {
+            for (int i = start; i < end; i++) {
                 if (frames[i] == 0)
                     continue;
     
