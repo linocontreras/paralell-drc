@@ -1,32 +1,53 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <omp.h>
-#include <string.h>
+/* This code implements the known sort algorithm "Counting sort" */
 
-struct timeval startTime, stopTime;
-int started = 0;
+#include <iostream>
+#include <cstring>
+#include <tbb/task_scheduler_init.h>
+#include <tbb/parallel_for.h>
+#include <tbb/blocked_range.h>
+#include "cppheader.h"
+#include <cmath>
 
-void start_timer() {
-	started = 1;
-	gettimeofday(&startTime, NULL);
-}
+using namespace std;
+using namespace tbb;
 
-double stop_timer() {
-	long seconds, useconds;
-	double duration = -1;
+#define N 10
+#define GRAIN 200
 
-	if (started) {
-		gettimeofday(&stopTime, NULL);
-		seconds  = stopTime.tv_sec  - startTime.tv_sec;
-		useconds = stopTime.tv_usec - startTime.tv_usec;
-		duration = (seconds * 1000.0) + (useconds / 1000.0);
-		started = 0;
+class Compressor {
+private:
+	double *frames;
+	int size;
+    double threshold;
+    double ratio;
+    double gain;
+
+public:
+	Compressor(double *frames, int size, double threshold, double ratio, double gain) 
+		: frames(frames), size(size), threshold(threshold), ratio(ratio), gain(gain) {}
+
+	void operator() 
+		(const blocked_range<int> &r) const {
+        int sign;
+		for (int i = r.begin(); i != r.end(); i++) {
+            if (frames[i] == 0)
+                continue;
+
+            sign = frames[i] < 0 ? -1 : 1;
+            frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
+
+            frames[i] *= log10(10 + gain);
+            if (frames[i] > threshold) {
+                frames[i] = threshold + ((frames[i] - threshold) * (1 / ratio));
+            }
+            frames[i] = frames[i] <= 1 ? frames[i] : 1;
+            frames[i] = frames[i] * sign;
+		}
 	}
-	return duration;
+};
+
+void printUsage(char *program) {
+    printf("Usage: %s file.frames threshold ratio gain\n", program);
 }
 
 typedef union
@@ -34,6 +55,7 @@ typedef union
     double d;
     unsigned char s[8];
 } Union_t;
+
 
 // reverse little to big endian or vice versa as per requirement
 double reverse_endian(double in)
@@ -53,30 +75,7 @@ double reverse_endian(double in)
     return val.d;
 }
 
-void compress(double *frames, int size, double threshold, double ratio, double gain) {
-    int i, sign;
-    #pragma omp parallel for shared(frames, threshold, ratio, gain) private(sign)
-    for (i = 0; i < size; i++) {
-        if (frames[i] == 0)
-                continue;
-
-        sign = frames[i] < 0 ? -1 : 1;
-        frames[i] = frames[i] < 0 ? -frames[i] : frames[i];
-
-        frames[i] *= log10(10 + gain);
-        if (frames[i] > threshold) {
-            frames[i] = threshold + ((frames[i] - threshold) * (1 / ratio));
-        }
-        frames[i] = frames[i] <= 1 ? frames[i] : 1;
-        frames[i] = frames[i] * sign;
-    }
-}
-
-void printUsage(char *program) {
-    printf("Usage: %s file.frames threshold ratio gain\n", program);
-}
-
-int main(int argc, char **argv) {
+int main(int argc, char* argv[]) {
     if (argc != 5) {
         printUsage(argv[0]);
         return 1;
@@ -113,7 +112,7 @@ int main(int argc, char **argv) {
     int size = ftell(file) / sizeof (double);
     rewind(file);
 
-    double *frames = malloc(size * sizeof *frames);
+    double *frames = new double[size * sizeof *frames];
 
     fread(frames, sizeof *frames, size, file);
 
@@ -121,13 +120,22 @@ int main(int argc, char **argv) {
     for (i = 0;i < size; i++) {
         frames[i] = reverse_endian(frames[i]);
     }
-    start_timer();
-    double ms;
 
-    printf("Starting OpenMP...\n");
-    compress(frames, size, threshold, ratio, gain);
-    ms = stop_timer();
-    printf("Elapsed time: %lf ms.\n", ms);
+    
+	Timer t;
+	double ms = 0;
+	
+    printf("Starting TBB...\n");
+	for (int i = 0; i < N; i++) {
+		t.start();
+
+		parallel_for(
+			blocked_range<int>(0, size, GRAIN),
+			Compressor(frames, size, threshold, ratio, gain));
+
+		ms += t.stop();
+	}
+    printf("Elapsed time: %lf ms.\n", (ms /N));
 
     char newpath[FILENAME_MAX];
 
@@ -143,8 +151,9 @@ int main(int argc, char **argv) {
     }
     fwrite(frames, sizeof *frames, size, newfile);
 
-    free(frames);
+    delete[] frames;
     fclose(file);
     fclose(newfile);
     return 0;
 }
+
