@@ -1,4 +1,4 @@
-all: Parser SequentialCompressor ThreadsCompressor FJCompressor CSequentialCompressor
+all: Parser SequentialCompressor ThreadsCompressor FJCompressor CSequentialCompressor TBBCompressor
 
 Parser:
 	javac -d ./bin ./src/parser/*
@@ -16,4 +16,7 @@ CSequentialCompressor: Parser
 	gcc -o ./bin/csequential ./src/csequential/csequential.c -lm -ggdb -Wall
 
 COpenMPCompressor: Parser
-	gcc -o ./bin/copenmp ./src/copenmp/copenmp.c -lm -ggdb -Wall -fopenmp
+	gcc -o ./bin/copenmp ./src/copenmp/copenmp.c -lm -Wall -fopenmp
+
+TBBCompressor: Parser
+	gcc -o ./bin/tbbcompressor ./src/tbb/tbbcompressor.cpp -lm -Wall -ltbb

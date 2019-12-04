@@ -1,3 +1,8 @@
+/**
+ * Programación avanzada: Proyecto final
+ * Fecha: 2019-12-03
+ * Autor: A01700457 - Lino Ronaldo Contreras Gallegos
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>

@@ -1,3 +1,10 @@
+/**
+ * Programación avanzada: Proyecto final
+ * Fecha: 2019-12-03
+ * Autor: A01700457 - Lino Ronaldo Contreras Gallegos
+ * Archivo compartido por el profesor durante la clase.
+ */
+
 #ifndef TIMER_H
 #define TIMER_H
 

@@ -1,9 +1,9 @@
-package parser;
 /**
  * Programación avanzada: Proyecto final
  * Fecha: 2019-12-03
  * Autor: A01700457 - Lino Ronaldo Contreras Gallegos
  */
+package parser;
 
 import java.io.*;
 import java.nio.ByteBuffer;
